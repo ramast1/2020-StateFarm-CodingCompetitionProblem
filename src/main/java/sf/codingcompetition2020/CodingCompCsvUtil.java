@@ -1,6 +1,9 @@
 package sf.codingcompetition2020;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,8 +32,106 @@ public class CodingCompCsvUtil {
 	 * @param classType -- Class of entries being read in.
 	 * @return -- List of entries being returned.
 	 */
+	@SuppressWarnings("unchecked")
 	public <T> List<T> readCsvFile(String filePath, Class<T> classType) {
 		//this is a test
+		try {
+			File file = new File(filePath);
+        	FileReader fr = new FileReader(file);
+        	BufferedReader br = new BufferedReader(fr);
+        	
+        	if(classType==Agent.class) {
+        		List<Agent> agents = new ArrayList<Agent>();
+        		String vars = br.readLine();
+        		String line="";
+        		String[] arr = new String[5];
+        		
+        		while((line = br.readLine())!=null) {
+        			arr=line.split(",");
+        			Agent p = new Agent();
+        			p.setAgentId(Integer.parseInt(arr[0]));
+        			p.setArea(arr[1]);
+        			p.setLanguage(arr[2]);
+        			p.setFirstName(arr[3]);
+        			p.setLastName(arr[4]);
+        			agents.add(p);
+        		}
+        		return (List<T>)agents;
+        	}
+        	else if(classType==Claim.class) {
+        		List<Claim> claims = new ArrayList<Claim>();
+        		String vars = br.readLine();
+        		String line="";
+        		String[] arr = new String[4];
+        		
+        		while((line = br.readLine())!=null) {
+        			arr=line.split(",");
+        			Claim c = new Claim();
+        			c.setClaimId(Integer.parseInt(arr[0]));
+        			c.setCustomerId(Integer.parseInt(arr[1]));
+        			c.setClosed(Boolean.parseBoolean(arr[2]));
+        			c.setMonthsOpen(Integer.parseInt(arr[3]));
+        			claims.add(c);
+        		}
+        		return (List<T>)claims;
+        	}
+        	else if(classType==Customer.class) {
+        		List<Customer> customers = new ArrayList<Customer>();
+        		String vars = br.readLine();
+        		String line="";
+        		String[] arr = new String[15];
+        		
+        		while((line = br.readLine())!=null) {
+        			arr=line.split(",");
+        			Customer c = new Customer();
+        			c.setCustomerId(Integer.parseInt(arr[0]));
+        			c.setFirstName(arr[1]);
+        			c.setLastName(arr[2]);
+        			c.setAge(Integer.parseInt(arr[3]));
+        			c.setArea(arr[4]);
+        			c.setAgentId(Integer.parseInt(arr[5]));
+        			c.setAgentRating((short) Integer.parseInt(arr[6]));
+        			c.setPrimaryLanguage(arr[7]);
+        			        			
+        			//String dependent = arr[8];
+        			
+        			//c.setDependents();
+        			
+        			
+        			//c.setHomePolicy(Boolean.parseBoolean(arr[9]));
+        			//c.setAutoPolicy(Boolean.parseBoolean(arr[10]));
+        			//c.setRentersPolicy(Boolean.parseBoolean(arr[11]));
+        			//c.setTotalMonthlyPremium(arr[12]);
+        			//c.setYearsOfService((short) Integer.parseInt(arr[13]));
+        			//c.setVehiclesInsured(Integer.parseInt(arr[14]));
+        			customers.add(c);
+        		}
+        		return (List<T>)customers;
+        	}
+        	else {
+        		List<Vendor> vendors = new ArrayList<Vendor>();
+        		String vars = br.readLine();
+        		String line="";
+        		String[] arr = new String[4];
+        		
+        		while((line = br.readLine())!=null) {
+        			arr=line.split(",");
+        			Vendor v = new Vendor();
+        			v.setVendorId(Integer.parseInt(arr[0]));
+        			v.setArea(arr[1]);
+        			v.setVendorRating(Integer.parseInt(arr[2]));
+        			v.setInScope(Boolean.parseBoolean(arr[3]));
+        			vendors.add(v);
+        		}
+        		return (List<T>)vendors;
+        	}     	
+        	       	
+		}
+		catch(IOException e) {
+            System.out.println(e);
+            
+         }
+		return null;
 	}
 
 	
@@ -41,7 +142,12 @@ public class CodingCompCsvUtil {
 	 * @return -- The number of agents in a given area
 	 */
 	public int getAgentCountInArea(String filePath,String area) {
-
+		List<Agent> agents = readCsvFile(filePath,Agent.class);
+        int numInArea = 0;
+        for(Agent a : agents) {
+             if(a.getArea().equals(area)) numInArea++;
+        }
+        return numInArea;
 	}
 
 	
@@ -53,7 +159,12 @@ public class CodingCompCsvUtil {
 	 * @return -- The number of agents in a given area
 	 */
 	public List<Agent> getAgentsInAreaThatSpeakLanguage(String filePath, String area, String language) {
-
+		List<Agent> agents = readCsvFile(filePath,Agent.class);
+        List<Agent> agentsInParam = new ArrayList<Agent>();
+        for(Agent a : agents) {
+            if(a.getArea().equals(area) & a.getLanguage().equals(language)) agentsInParam.add(a);
+        }
+        return agentsInParam;
 	}
 	
 	
@@ -66,7 +177,19 @@ public class CodingCompCsvUtil {
 	 * @return -- The number of customers that use a certain agent in a given area.
 	 */
 	public short countCustomersFromAreaThatUseAgent(Map<String,String> csvFilePaths, String customerArea, String agentFirstName, String agentLastName) {
-		
+		List<Agent> agents = readCsvFile(csvFilePaths.get("agentList"),Agent.class);
+        List<Customer> customers = readCsvFile(csvFilePaths.get("customerList"),Customer.class);
+        int agentId = -1;
+        short numCustomers = 0;
+        for(Agent a : agents) {
+            if(a.getFirstName().equals(agentFirstName) & a.getLastName().equals(agentLastName)) {
+                 agentId = a.getAgentId();
+            }
+        }
+        for(Customer c : customers) {
+            if(c.getArea().equals(customerArea) & c.getAgentId()==agentId) numCustomers++;
+        }
+        return numCustomers;
 	}
 
 	
@@ -77,7 +200,7 @@ public class CodingCompCsvUtil {
 	 * @return -- List of customers retained for a given number of years, in ascending order of policy cost.
 	 */
 	public List<Customer> getCustomersRetainedForYearsByPlcyCostAsc(String customerFilePath, short yearsOfService) {
-
+		return null;
 	}
 
 	
@@ -88,7 +211,7 @@ public class CodingCompCsvUtil {
 	 * @return -- List of customers who’ve made an inquiry for a policy but have not signed up.
 	 */
 	public List<Customer> getLeadsForInsurance(String filePath) {
-
+		return null;
 	}
 
 
@@ -103,7 +226,7 @@ public class CodingCompCsvUtil {
 	 * @return -- List of vendors within a given area, filtered by scope and vendor rating.
 	 */
 	public List<Vendor> getVendorsWithGivenRatingThatAreInScope(String filePath, String area, boolean inScope, int vendorRating) {
-
+		return null;
 	}
 
 
@@ -117,7 +240,7 @@ public class CodingCompCsvUtil {
 	 * @return -- List of customers filtered by age, number of vehicles insured and the number of dependents.
 	 */
 	public List<Customer> getUndisclosedDrivers(String filePath, int vehiclesInsured, int dependents) {
-
+		return null;
 	}	
 
 
@@ -130,7 +253,7 @@ public class CodingCompCsvUtil {
 	 * @return -- Agent ID of agent with the given rank.
 	 */
 	public int getAgentIdGivenRank(String filePath, int agentRank) {
-			
+			return 0;
 	}	
 
 	
@@ -141,7 +264,7 @@ public class CodingCompCsvUtil {
 	 * @return -- List of customers who’ve filed a claim within the last <numberOfMonths>.
 	 */
 	public List<Customer> getCustomersWithClaims(Map<String,String> csvFilePaths, short monthsOpen) {
-
+		return null;
 	}	
 
 }
